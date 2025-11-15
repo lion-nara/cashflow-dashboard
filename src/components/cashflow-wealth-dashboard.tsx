@@ -113,7 +113,7 @@ const CashFlowDashboard = () => {
   ];
 
   const stocksByBroker = useMemo(() => {
-    const grouped = {};
+    const grouped: any = {};
     const allStocks = [...stocks.korea, ...stocks.us, ...stocks.etf];
     allStocks.forEach(stock => {
       if (!grouped[stock.broker]) {
@@ -128,7 +128,7 @@ const CashFlowDashboard = () => {
   }, [stocks.korea, stocks.us, stocks.etf]);
 
   const stocksBySector = useMemo(() => {
-    const grouped = {};
+    const grouped: any = {};
     const allStocks = [...stocks.korea, ...stocks.us];
     allStocks.forEach(stock => {
       if (!grouped[stock.sector]) {
