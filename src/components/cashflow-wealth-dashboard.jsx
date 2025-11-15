@@ -34,6 +34,11 @@ import {
   Landmark,
 } from "lucide-react";
 
+const initialRealEstate = [
+  { type: "아파트(거주)", value: 500_000_000, loan: 150_000_000, rent: 0 },
+  { type: "오피스텔(임대)", value: 200_000_000, loan: 0, rent: 800_000 },
+];
+
 // 금액 포맷 함수
 const formatCurrency = (value) => {
   if (value == null || isNaN(value)) return "-";
@@ -49,6 +54,7 @@ const formatCurrency = (value) => {
 const CashFlowDashboard = () => {
   const [activeTab, setActiveTab] = useState("cashflow");
   const [stockView, setStockView] = useState("integrated");
+  const [realEstateList, setRealEstateList] = useState(initialRealEstate);  // ✅ 추가
 
   // ---------------------- 샘플 데이터 ----------------------
 
@@ -84,10 +90,10 @@ const CashFlowDashboard = () => {
     },
   ];
 
-  const realEstate = [
-    { type: "아파트(거주)", value: 500_000_000, loan: 150_000_000, rent: 0 },
-    { type: "오피스텔(임대)", value: 200_000_000, loan: 0, rent: 800_000 },
-  ];
+  // const initialRealEstate = [
+  //   { type: "아파트(거주)", value: 500_000_000, loan: 150_000_000, rent: 0 },
+  //   { type: "오피스텔(임대)", value: 200_000_000, loan: 0, rent: 800_000 },
+  // ];
 
   const pensions = [
     {
@@ -208,10 +214,24 @@ const CashFlowDashboard = () => {
   const totalStocksValue = stocksKoreaValue + stocksUSValue + etfValue;
 
   const totalPensionBalance = pensions.reduce((sum, p) => sum + p.balance, 0);
-  const realEstateNetValue = realEstate.reduce(
-    (sum, r) => sum + r.value - r.loan,
+
+  // 👉 부동산 관련 계산 (realEstateList 기준)
+  const totalRealEstateValue = realEstateList.reduce(
+    (sum, r) => sum + r.value,
     0
   );
+  const totalRealEstateLoan = realEstateList.reduce(
+    (sum, r) => sum + r.loan,
+    0
+  );
+  const totalMonthlyRent = realEstateList.reduce(
+    (sum, r) => sum + r.rent,
+    0
+  );
+  const realEstateNetValue = totalRealEstateValue - totalRealEstateLoan;
+  const realEstateYield =
+    ((totalMonthlyRent * 12) / (totalRealEstateValue || 1)) * 100;
+
   const totalLoanBalance = loans.reduce((sum, l) => sum + l.balance, 0);
 
   const totalAssets =
@@ -221,18 +241,18 @@ const CashFlowDashboard = () => {
     otherAssets.gold +
     otherAssets.crypto +
     totalPensionBalance +
-    realEstate.reduce((sum, r) => sum + r.value, 0);
+    totalRealEstateValue;
 
   const netWorth = totalAssets - totalLoanBalance;
 
   const portfolioData = [
     {
       name: "부동산",
-      value: realEstate.reduce((sum, r) => sum + r.value, 0),
+      value: totalRealEstateValue,
       color: "#8b5cf6",
     },
     { name: "주식", value: totalStocksValue, color: "#3b82f6" },
-    { name: "예적금", value: otherAssets.depossits, color: "#10b981" },
+    { name: "예적금", value: otherAssets.deposits, color: "#10b981" },
     { name: "채권", value: otherAssets.bonds, color: "#f59e0b" },
     { name: "연금", value: totalPensionBalance, color: "#ec4899" },
     { name: "금", value: otherAssets.gold, color: "#fbbf24" },
@@ -267,6 +287,7 @@ const CashFlowDashboard = () => {
     },
     { name: "생활비", value: monthlyExpenses.living, color: "#6366f1" },
   ];
+
 
   const stocksByBroker = useMemo(() => {
     const grouped = {};
@@ -704,6 +725,115 @@ const CashFlowDashboard = () => {
                 </button>
               ))}
             </div>
+
+        {/* ---------------- 부동산 탭 ---------------- */}
+        {activeTab === "realestate" && (
+          <div className="space-y-6">
+            {/* 상단 요약 카드 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-300 text-sm">부동산 시가</span>
+                  <Home className="text-blue-400" size={18} />
+                </div>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(totalRealEstateValue)}
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-300 text-sm">부동산 대출잔액</span>
+                  <CreditCard className="text-orange-400" size={18} />
+                </div>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(totalRealEstateLoan)}
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-300 text-sm">연 임대수익률(단순)</span>
+                  <Landmark className="text-purple-400" size={18} />
+                </div>
+                <div className="text-2xl font-bold">
+                  {realEstateYield.toFixed(1)}%
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  연 임대수익 / 부동산 시가 기준 단순 계산
+                </div>
+              </div>
+            </div>
+
+            {/* 리스트 + 버튼 */}
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <Home className="text-blue-400" />
+                  보유 부동산 목록
+                </h3>
+                <button
+                  onClick={handleAddRealEstate}
+                  className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-sm font-semibold"
+                >
+                  + 부동산 추가
+                </button>
+              </div>
+
+              {realEstateList.length === 0 ? (
+                <p className="text-gray-400 text-sm">
+                  아직 등록된 부동산이 없습니다. 상단 버튼으로 추가해 보세요.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {realEstateList.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 bg-white/5 rounded-lg"
+                    >
+                      <div>
+                        <div className="font-semibold">{item.type}</div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          시가 {formatCurrency(item.value)} · 대출{" "}
+                          {formatCurrency(item.loan)} · 월세{" "}
+                          {formatCurrency(item.rent)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className="text-sm text-gray-300">
+                            순자산{" "}
+                            <span className="font-semibold text-green-400">
+                              {formatCurrency(item.value - item.loan)}
+                            </span>
+                          </div>
+                          {item.value > 0 && (
+                            <div className="text-xs text-gray-400">
+                              수익률{" "}
+                              {(
+                                ((item.rent * 12) / item.value) *
+                                100
+                              ).toFixed(1)}
+                              %
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleRemoveRealEstate(index)}
+                          className="px-3 py-1 rounded-md bg-red-500/80 hover:bg-red-600 text-xs font-semibold"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+
 
             {/* 통합 보기 */}
             {stockView === "integrated" && (
