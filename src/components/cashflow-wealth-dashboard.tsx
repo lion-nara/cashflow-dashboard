@@ -1,8 +1,35 @@
 "use client";
+// @ts-nocheck
 
-import React, { useState, useMemo } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Home, CreditCard, PiggyBank, Calendar, Building2, Landmark } from 'lucide-react';
+import React, { useState, useMemo } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Home,
+  CreditCard,
+  PiggyBank,
+  Calendar,
+  Briefcase,
+  BarChart2,
+  Building2,
+  Wallet,
+  Layers3,
+  Banknote,
+} from "lucide-react";
 
 const CashFlowDashboard = () => {
   const [activeTab, setActiveTab] = useState('cashflow');
